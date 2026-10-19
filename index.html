@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<meta name="description" content="BurnLog — log workouts, estimate calories with 2024 Compendium MET values, and chart your progress.">
+<title>BurnLog</title>
+<link rel="manifest" href="manifest.webmanifest?v=fit1">
+<link rel="icon" href="icons/icon.svg?v=fit1" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png?v=fit1">
+<link rel="stylesheet" href="css/app.css?v=fit1">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="flame" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="fg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff3d1f"/><stop offset="1" stop-color="#ffc53d"/></linearGradient></defs><path fill="url(#fg)" d="M12 2c.6 3.2-1.4 5-2.9 6.7C7.6 10.4 6 12.2 6 15a6 6 0 0 0 12 0c0-2.6-1.3-4.4-2.4-5.6-.2 1.5-.9 2.6-2 3.1.6-3.6-.6-7.5-1.6-10.5z"/></svg>
+      <span>Burn<b>Log</b></span>
+    </div>
+    <div class="topbar-right" id="topbar-right"></div>
+  </header>
+
+  <main id="views">
+    <!-- TODAY -->
+    <section class="view active" id="view-today" data-view="today">
+      <div class="daynav">
+        <button class="icon-btn" id="day-prev" aria-label="Previous day">‹</button>
+        <button class="day-label" id="day-label">Today</button>
+        <button class="icon-btn" id="day-next" aria-label="Next day">›</button>
+      </div>
+      <div class="hero card">
+        <div class="hero-main">
+          <div class="hero-kcal"><span id="today-kcal">0</span><small>kcal</small></div>
+          <div class="hero-sub" id="today-sub">No workouts yet</div>
+        </div>
+        <div class="hero-stats">
+          <div><b id="today-min">0</b><span>min</span></div>
+          <div><b id="today-count">0</b><span>entries</span></div>
+          <div><b id="today-streak">0</b><span>day streak</span></div>
+        </div>
+      </div>
+
+      <div class="card quick">
+        <label class="quick-label" for="quick-input">Quick add</label>
+        <form id="quick-form" class="quick-row" autocomplete="off">
+          <input id="quick-input" type="text" enterkeyhint="go" placeholder="e.g. ran 3.2 miles in 28 min" aria-label="Describe your workout">
+          <button class="btn primary" type="submit" id="quick-go">Add</button>
+        </form>
+        <div class="quick-examples" id="quick-examples"></div>
+        <div id="quick-results" class="quick-results" aria-live="polite"></div>
+      </div>
+
+      <div class="section-head"><h2>Entries</h2><button class="link-btn" data-goto="log">+ Log workout</button></div>
+      <ul class="entry-list" id="today-list"></ul>
+      <div class="empty" id="today-empty">
+        <p>Nothing logged for this day.</p>
+        <p class="muted">Type what you did above, or tap <b>Log</b> below.</p>
+      </div>
+    </section>
+
+    <!-- LOG -->
+    <section class="view" id="view-log" data-view="log">
+      <h1 class="view-title" id="log-title">Log a workout</h1>
+      <button class="picker-btn card" id="pick-exercise" type="button">
+        <span class="picker-cat" id="pick-cat">Exercise</span>
+        <span class="picker-name" id="pick-name">Choose an exercise…</span>
+        <span class="picker-meta" id="pick-meta">1,200+ activities · 2024 Compendium</span>
+        <span class="chev">›</span>
+      </button>
+      <div class="popular-row" id="popular-row"></div>
+
+      <form id="log-form" class="card form" autocomplete="off" hidden>
+        <div class="seg" id="mode-seg" role="tablist"></div>
+
+        <div class="field-group" data-mode="distance">
+          <label>Distance</label>
+          <div class="input-unit"><input type="number" inputmode="decimal" step="0.01" min="0" id="f-dist" placeholder="0.00"><span class="unit" id="f-dist-unit">mi</span></div>
+        </div>
+        <div class="field-group" data-mode="reps">
+          <div class="two">
+            <div><label for="f-reps">Reps</label>
+              <div class="stepper"><button type="button" data-step="f-reps:-1">−</button><input type="number" inputmode="numeric" min="0" id="f-reps" value="10"><button type="button" data-step="f-reps:1">+</button></div></div>
+            <div><label for="f-sets">Sets</label>
+              <div class="stepper"><button type="button" data-step="f-sets:-1">−</button><input type="number" inputmode="numeric" min="1" id="f-sets" value="1"><button type="button" data-step="f-sets:1">+</button></div></div>
+          </div>
+          <label for="f-spr" class="small-label">Seconds per rep (estimate)</label>
+          <div class="input-unit small"><input type="number" inputmode="decimal" step="0.1" min="0.3" id="f-spr"><span class="unit">s/rep</span></div>
+        </div>
+        <div class="field-group" data-mode="time">
+          <label id="time-label">Duration</label>
+          <div class="hms">
+            <div class="input-unit"><input type="number" inputmode="numeric" min="0" id="f-h" placeholder="0"><span class="unit">h</span></div>
+            <div class="input-unit"><input type="number" inputmode="numeric" min="0" max="59" id="f-m" placeholder="30"><span class="unit">min</span></div>
+            <div class="input-unit"><input type="number" inputmode="numeric" min="0" max="59" id="f-s" placeholder="0"><span class="unit">s</span></div>
+          </div>
+        </div>
+
+        <div class="calc-card" id="calc-card">
+          <div class="calc-kcal"><span id="calc-kcal">0</span><small>kcal</small><em id="calc-est" hidden>estimate</em></div>
+          <div class="calc-pace" id="calc-pace"></div>
+          <div class="calc-formula" id="calc-formula"></div>
+          <div class="calc-src" id="calc-src"></div>
+          <ul class="calc-notes" id="calc-notes"></ul>
+        </div>
+
+        <div class="two">
+          <div><label for="f-date">Date</label><input type="date" id="f-date"></div>
+          <div><label for="f-time">Time</label><input type="time" id="f-time"></div>
+        </div>
+        <label for="f-note">Note</label>
+        <input type="text" id="f-note" placeholder="Optional">
+        <div class="form-actions">
+          <button type="button" class="btn ghost" id="log-cancel" hidden>Cancel</button>
+          <button type="button" class="btn danger" id="log-delete" hidden>Delete</button>
+          <button type="submit" class="btn primary grow" id="log-save">Save workout</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- CHARTS -->
+    <section class="view" id="view-charts" data-view="charts">
+      <h1 class="view-title">Progress</h1>
+      <div class="chips scroll" id="chart-views">
+        <button data-cview="calories" class="chip">Calories</button>
+        <button data-cview="category" class="chip">By category</button>
+        <button data-cview="distance" class="chip">Run distance</button>
+        <button data-cview="pace" class="chip">Run pace</button>
+        <button data-cview="totals" class="chip">Totals</button>
+      </div>
+      <div class="chart-controls" id="chart-controls">
+        <div class="seg small" id="range-seg">
+          <button data-range="7d">7d</button><button data-range="30d">30d</button><button data-range="90d">90d</button><button data-range="1y">1y</button><button data-range="all">All</button>
+        </div>
+        <div class="row-between">
+          <div class="seg small" id="group-seg"><button data-group="day">Day</button><button data-group="week">Week</button><button data-group="month">Month</button></div>
+          <div class="seg small" id="type-seg"></div>
+        </div>
+      </div>
+      <div class="card chart-card" id="chart-card">
+        <div class="chart-head"><h3 id="chart-title">Calories</h3><span class="chart-sum" id="chart-sum"></span></div>
+        <div class="chart-wrap"><canvas id="chart-canvas" aria-label="Chart"></canvas></div>
+        <div class="empty small" id="chart-empty" hidden>No data in this range yet. Log some workouts — or load sample data in Settings.</div>
+      </div>
+      <div class="totals" id="totals"></div>
+      <div class="row-between units-row">
+        <span class="muted">Units</span>
+        <div class="row-gap">
+          <div class="seg small" id="cu-dist"><button data-dist="mi">mi</button><button data-dist="km">km</button></div>
+          <div class="seg small" id="cu-wt"><button data-wt="lb">lb</button><button data-wt="kg">kg</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="view" id="view-history" data-view="history">
+      <h1 class="view-title">History</h1>
+      <div class="search-row">
+        <input type="search" id="hist-search" placeholder="Search workouts, notes…" aria-label="Search history">
+      </div>
+      <div class="row-gap filters">
+        <select id="hist-cat" aria-label="Category"><option value="">All categories</option></select>
+        <select id="hist-range" aria-label="Range"><option value="all">All time</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option><option value="90d">Last 90 days</option><option value="1y">Last year</option></select>
+      </div>
+      <div class="hist-summary muted" id="hist-summary"></div>
+      <div id="hist-list"></div>
+      <div class="empty" id="hist-empty" hidden><p>No workouts match.</p></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings" data-view="settings">
+      <h1 class="view-title">Settings</h1>
+      <div class="card">
+        <h3>Profile</h3>
+        <div class="profile-summary" id="profile-summary"></div>
+        <button class="btn ghost full" id="edit-profile">Edit profile</button>
+      </div>
+      <div class="card">
+        <h3>Units</h3>
+        <div class="row-between"><span>Distance</span><div class="seg small" id="set-dist"><button data-dist="mi">Miles</button><button data-dist="km">Kilometers</button></div></div>
+        <div class="row-between"><span>Weight</span><div class="seg small" id="set-wt"><button data-wt="lb">lb</button><button data-wt="kg">kg</button></div></div>
+      </div>
+      <div class="card">
+        <h3>Calorie formula</h3>
+        <div class="seg" id="set-formula"><button data-formula="gross">Gross (MET)</button><button data-formula="net">Net (MET − 1)</button></div>
+        <p class="muted small" id="formula-help"></p>
+      </div>
+      <div class="card">
+        <h3>Your data</h3>
+        <p class="muted small">Stored on this device (<span id="adapter-name">localStorage</span>). Export a backup before clearing your browser.</p>
+        <div class="btn-grid">
+          <button class="btn ghost" id="btn-export">Export JSON</button>
+          <label class="btn ghost file-btn">Import JSON<input type="file" id="btn-import" accept="application/json,.json" hidden></label>
+          <button class="btn ghost" id="btn-sample">Load sample data</button>
+          <button class="btn ghost" id="btn-sample-clear">Remove sample data</button>
+        </div>
+        <button class="btn danger full" id="btn-clear">Clear all data</button>
+      </div>
+      <div class="card about">
+        <h3>About the numbers</h3>
+        <p class="small">MET values come from the <b>2024 Adult Compendium of Physical Activities</b> (Herrmann et al., 2024; pacompendium.com) — <span id="db-count"></span> activities plus quick presets that point at Compendium codes.</p>
+        <p class="small">Calories are estimates. Rep-based moves convert reps to time using a seconds-per-rep you can adjust. Runs, walks, rides and swims pick the Compendium MET that matches your speed.</p>
+        <p class="small muted">Smart (AI) parsing: <span id="ai-status">not connected — rule-based parser in use</span>.</p>
+        <p class="small muted">BurnLog fit1 · first draft</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="today" class="active"><svg viewBox="0 0 24 24"><path d="M12 2c.6 3.2-1.4 5-2.9 6.7C7.6 10.4 6 12.2 6 15a6 6 0 0 0 12 0c0-2.6-1.3-4.4-2.4-5.6-.2 1.5-.9 2.6-2 3.1.6-3.6-.6-7.5-1.6-10.5z"/></svg><span>Today</span></button>
+    <button data-tab="log"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg><span>Log</span></button>
+    <button data-tab="charts"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg><span>Charts</span></button>
+    <button data-tab="history"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" stroke-width="2" fill="none"/><path d="M12 7.5V12l3 2" stroke-width="2" stroke-linecap="round" fill="none"/></svg><span>History</span></button>
+    <button data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="2" fill="none"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke-width="2" stroke-linecap="round" fill="none"/></svg><span>Settings</span></button>
+  </nav>
+</div>
+
+<!-- Exercise picker sheet -->
+<div class="sheet" id="picker" hidden>
+  <div class="sheet-head">
+    <button class="icon-btn" id="picker-close" aria-label="Close">✕</button>
+    <input type="search" id="picker-search" placeholder="Search 1,200+ activities" aria-label="Search exercises">
+  </div>
+  <div class="chips scroll" id="picker-cats"></div>
+  <div class="picker-count muted small" id="picker-count"></div>
+  <ul class="picker-list" id="picker-list"></ul>
+</div>
+
+<!-- Profile modal -->
+<div class="modal" id="profile-modal" hidden>
+  <form class="modal-card" id="profile-form" autocomplete="off">
+    <div class="modal-flame">🔥</div>
+    <h2 id="profile-title">Welcome to BurnLog</h2>
+    <p class="muted small" id="profile-intro">Your weight is used to turn MET values into calories. Height, age and sex are optional.</p>
+    <label for="p-weight">Weight</label>
+    <div class="row-gap">
+      <div class="input-unit grow"><input type="number" inputmode="decimal" step="0.1" min="40" id="p-weight" required placeholder="180"></div>
+      <div class="seg small" id="p-wunit"><button type="button" data-wt="lb">lb</button><button type="button" data-wt="kg">kg</button></div>
+    </div>
+    <label>Height <span class="muted">(optional)</span></label>
+    <div class="row-gap" id="p-height-imp">
+      <div class="input-unit grow"><input type="number" inputmode="numeric" min="3" max="8" id="p-ft" placeholder="5"><span class="unit">ft</span></div>
+      <div class="input-unit grow"><input type="number" inputmode="numeric" min="0" max="11" id="p-in" placeholder="10"><span class="unit">in</span></div>
+    </div>
+    <div class="row-gap" id="p-height-met" hidden>
+      <div class="input-unit grow"><input type="number" inputmode="numeric" min="100" max="250" id="p-cm" placeholder="178"><span class="unit">cm</span></div>
+    </div>
+    <div class="two">
+      <div><label for="p-age">Age <span class="muted">(optional)</span></label><input type="number" inputmode="numeric" min="13" max="110" id="p-age" placeholder="—"></div>
+      <div><label for="p-sex">Sex <span class="muted">(optional)</span></label>
+        <select id="p-sex"><option value="">—</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn ghost" id="profile-cancel" hidden>Cancel</button>
+      <button type="submit" class="btn primary grow">Save</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="vendor/chart.umd.min.js?v=fit1"></script>
+<script src="js/db.js?v=fit1"></script>
+<script src="js/calc.js?v=fit1"></script>
+<script src="js/parser.js?v=fit1"></script>
+<script src="js/store.js?v=fit1"></script>
+<script src="js/sample.js?v=fit1"></script>
+<script src="js/charts.js?v=fit1"></script>
+<script src="js/app.js?v=fit1"></script>
+</body>
+</html>
